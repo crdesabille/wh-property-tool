@@ -168,6 +168,26 @@ const queryProperty = async args => {
     return Array.from(searchResult);
 };
 
+// Function: format results
+const formatResults = result => {
+    let formattedResult = [];
+    let updatedResult = {};
+    result.forEach(item => {
+        let res;
+        if (item.className === 'col-md-8 col-md-offset-2' || item.className === 'alert alert-danger') {
+            res = { resultCount: item.innerText };
+        } else if (item.className === 'well col-md-8 col-md-offset-2') {
+            for (const child of item.children) {
+                console.log(child);
+            }
+        } else {
+            res = { error: 'something went wrong' };
+        }
+    });
+    // console.log(result);
+    return 'test';
+};
+
 // Function: Main function for task type = search
 const searchProperties = async () => {
     let results = [];
@@ -177,25 +197,12 @@ const searchProperties = async () => {
     console.log(inputType);
     if (properties) {
         setProcessToRun();
-        for (let property of properties) {
+        for (const property of properties) {
             if (isProcessRunning) {
                 const result = await queryProperty([property, inputType]);
+                const formattedResult = formatResults(result);
                 results.push({ [property]: [...result] });
             }
-        }
-    }
-    for (let result of results) {
-        for (let key in result) {
-            result[key].map(res => {
-                res.childNodes.forEach(child => {
-                    if (child.nodeType === 3) {
-                        console.log(child);
-                        updatedResults.push({ [key]: child });
-                    } else if (child.nodeType === 1) {
-                        console.log(child);
-                    }
-                });
-            });
         }
     }
 };
