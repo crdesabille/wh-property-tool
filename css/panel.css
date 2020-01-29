@@ -1,0 +1,100 @@
+body {
+    color: white;
+    font-family: Roboto, -apple-system, sans-serif;
+    background-color: #262933; /*465160 262933 343d4a*/
+    box-sizing: border-box;
+    width: 420px;
+    padding: 0;
+    margin: 0;
+    text-align: center;
+}
+
+h3 {
+    box-sizing: border-box;
+    background-color: #262933;
+    margin: 0;
+    padding: 5px;
+}
+
+.task_type_container,
+.input_type_container {
+    box-sizing: border-box;
+    width: 97%;
+    padding: 5px;
+    margin: 5px auto;
+    background-color: #465160; /*465160 262933 343d4a*/
+    border-bottom: 1px solid #262933;
+}
+
+.task_type_container p,
+.input_type_container p {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0 0 5px 0;
+    text-align: left;
+}
+
+.task_type_container input,
+.input_type_container input {
+    box-sizing: border-box;
+    vertical-align: top;
+    margin: 0 5px 0 10px;
+}
+.input_container {
+    box-sizing: border-box;
+    width: 97%;
+    padding: 5px;
+    margin: 5px auto 0 auto;
+    background-color: #465160; /*465160 262933 343d4a*/
+}
+
+.input_container p {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0 0 5px 0;
+    text-align: left;
+}
+
+#input_data {
+    resize: none;
+    margin: auto;
+}
+
+.controls_container {
+    box-sizing: border-box;
+    width: 97%;
+    padding: 0 0 5px 0;
+    margin: auto;
+    background-color: #465160; /*465160 262933 343d4a*/
+}
+
+button {               
+    background-color: #262933; 
+    color: white; 
+    border: 1px solid white;
+    width: max-content;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 12px;
+    margin: 2px 2px;
+    cursor: pointer;
+    white-space: nowrap;                
+} 
+
+button:hover:enabled{
+    background-color: white; 
+    color: #262933; 
+    border: 1px solid #262933;
+}
+
+button:disabled {
+    background-color: gray; 
+    color: darkgray; 
+    border: 1px solid gray;
+    pointer-events: none;
+}
+
+
+
+

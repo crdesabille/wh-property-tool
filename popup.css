@@ -1,0 +1,37 @@
+body {
+    color: white;
+    font-family: Roboto, -apple-system, sans-serif;
+    background-color: #465160; /*465160 262933 343d4a*/
+    
+}
+
+button {               
+    background-color: #262933; 
+    color: white; 
+    border: 1px solid white;
+    width: max-content;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 12px;
+    margin: 2px 2px;
+    cursor: pointer;
+    white-space: nowrap;                
+} 
+
+button:hover:enabled{
+    background-color: white; 
+    color: #262933; 
+    border: 1px solid #262933;
+}
+
+button:disabled {
+    background-color: gray; 
+    color: darkgray; 
+    border: 1px solid gray;
+    pointer-events: none;
+}
+
+
+
+

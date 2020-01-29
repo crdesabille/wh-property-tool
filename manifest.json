@@ -1,0 +1,48 @@
+{
+    "name": "NEWAP Cebu WH Property Tool",
+    "version": "2.0",
+    "description": "A simple tool to partially automate search/exclusion of multiple property links.",
+    "manifest_version": 2,
+    "background": {
+        "scripts": [
+            "background.js"
+        ],
+        "persistent": false
+    },
+    "permissions": [
+        "storage",
+        "http://warehouse.activepipe.com/api/onboarding/data/exclude"
+    ],
+    "page_action": {
+        "default_popup": "popup.html",
+        "default_icon": {
+            "16": "16.png",
+            "32": "32.png",
+            "48": "48.png",
+            "128": "128.png"
+        }
+    },
+    "options_page": "options.html",
+    "icons": {
+        "16": "16.png",
+        "32": "32.png",
+        "48": "48.png",
+        "128": "128.png"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "http://warehouse.activepipe.com/api/onboarding/data/exclude"
+            ],
+            "js": [
+                "content.js"
+            ],
+            "css": [
+                "content.css"
+            ]
+        }
+    ],
+    "web_accessible_resources": [
+        "panel.html"
+    ]
+}
