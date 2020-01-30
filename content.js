@@ -191,14 +191,14 @@ const queryProperty = async args => {
     return searchResult;
 };
 
-// Function: format results
-const formatResults = results => {
-    let res = {};
+// Function: take only the needed data from searchResult and put it in one object
+const formatResult = results => {
+    let formattedResult = {};
     for (const result of results) {
         if (result.className === 'alert alert-danger') {
-            res = { resultCount: result.innerText, results: null }; // No listings found
+            formattedResult = { resultCount: result.innerText, results: null }; // No listings found
         } else if (result.className === 'col-md-8 col-md-offset-2') {
-            res = { resultCount: result.innerText }; // ### listings found
+            formattedResult = { resultCount: result.innerText }; // ### listings found
         } else if (result.className === 'well col-md-8 col-md-offset-2') {
             // Each listing
             for (const child of result.children) {
@@ -212,31 +212,31 @@ const formatResults = results => {
                             details = { ...details, [key]: content };
                         }
                     }
-                    res = { ...res, results: { ...res.results, [details['property_id']]: { ...details } } };
+                    formattedResult = { ...formattedResult, results: { ...formattedResult.results, [details['property_id']]: { ...details } } };
                 }
             }
         }
     }
-    return res;
+    return formattedResult;
 };
 
 // Function: Main function for task type = search
 const searchProperties = async () => {
-    let results = [];
-    const properties = getData();
+    let searchResults = [];
+    const searchKeys = getData();
     const inputType = getInputType();
-    if (properties) {
+    if (searchKeys) {
         setProcessToRun();
-        for (const property of properties) {
+        for (const searchKey of searchKeys) {
             if (isProcessRunning) {
-                const result = await queryProperty([property, inputType]);
-                const formattedResult = formatResults(result);
-                const updatedResult = { searchKey: property, ...formattedResult };
-                results.push(updatedResult);
+                const searchResult = await queryProperty([searchKey, inputType]);
+                const formattedResult = formatResult(searchResult);
+                const completeSearchResult = { searchKey: searchKey, ...formattedResult };
+                searchResults.push(completeSearchResult);
             }
         }
     }
-    console.log(results);
+    console.log(searchResults);
     setProcessToStop();
 };
 
@@ -246,7 +246,7 @@ const excludeProperties = () => { };
 // Function: Main function for task type = include
 const includeProperties = () => { };
 
-const routeTaskType = () => {
+const selectTaskType = () => {
     const taskType = getTaskType();
     switch (taskType) {
         case 'search': return searchProperties();
@@ -263,7 +263,7 @@ const checkDependencies = () => {
     if (!isProcessRunning) {
         if (officeSelector.value !== '') {
             if (inputData) {
-                routeTaskType();
+             selectTaskType();
             } else {
                 alert('Please input IDs/Addresses of properties you want to process!');
             }
