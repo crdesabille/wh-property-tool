@@ -141,12 +141,34 @@ const setProcessToStop = () => {
     if (startStopBtn) startStopBtn.innerText = 'START';
     const clearBtn = document.getElementById('clearBtn');
     if (clearBtn) clearBtn.disabled = false;
-    console.log('Process halted!');
+    console.log('Process halted or complete!');
+};
+
+// Function: Clear fields and reset button
+const resetFields = () => {
+    const inputTypeSelectors = document.getElementsByName('input_type');
+    if (inputTypeSelectors.length > 0) {
+        inputTypeSelectors.forEach(inputTypeSelector => {
+            inputTypeSelector.checked = inputTypeSelector.value === 'propertyId' ? true : false;
+        });
+    }
+    const taskTypeSelectors = document.getElementsByName('task_type');
+    if (taskTypeSelectors.length > 0) {
+        taskTypeSelectors.forEach(taskTypeSelector => {
+            taskTypeSelector.checked = taskTypeSelector.value === 'search' ? true : false;
+        });
+    }
+    const inputDataContainer = document.getElementById('input_data');
+    if (inputDataContainer) inputDataContainer.value = '';
+    const propertyIdTextBox = document.getElementById('property_id');
+    if (propertyIdTextBox) propertyIdTextBox.value = '';
+    const addressTextBox = document.getElementById('address');
+    if (addressTextBox) addressTextBox.value = '';
 };
 
 // Function: click search button
 const clickSearchBtn = async sec => {
-    const searchBtn = document.getElementById("btn-search");
+    const searchBtn = document.getElementById('btn-search');
     if (searchBtn) searchBtn.click();
     await timer(sec);
 }
@@ -154,57 +176,66 @@ const clickSearchBtn = async sec => {
 // Function: Query each property from warehouse
 const queryProperty = async args => {
     const [property, inputType] = args;
-    const textBox = inputType === 'propertyId' ? document.getElementById("property_id") : document.getElementById("address");
+    const textBox = inputType === 'propertyId' ? document.getElementById('property_id') : document.getElementById('address');
     textBox.value = property;
     let waitTime = 1;
-    let searchResult;
     let warehouseResponse;
-    while (!warehouseResponse) {
+    do {
         await clickSearchBtn(waitTime);
         warehouseResponse = document.getElementById('results');
-        searchResult = warehouseResponse ? warehouseResponse.children : null;
         waitTime += 0.1;
-    }
-    return Array.from(searchResult);
+    } while (document.getElementById('results').style.display === 'none' || document.getElementById('results') === null);
+    const searchResult = warehouseResponse ? warehouseResponse.children : null;
+    return searchResult;
 };
 
 // Function: format results
-const formatResults = result => {
-    let formattedResult = [];
-    let updatedResult = {};
-    result.forEach(item => {
-        let res;
-        if (item.className === 'col-md-8 col-md-offset-2' || item.className === 'alert alert-danger') {
-            res = { resultCount: item.innerText };
-        } else if (item.className === 'well col-md-8 col-md-offset-2') {
-            for (const child of item.children) {
-                console.log(child);
+const formatResults = results => {
+    let res = {};
+    for (const result of results) {
+        if (result.className === 'alert alert-danger') {
+            res = { resultCount: result.innerText, results: null }; // No listings found
+        } else if (result.className === 'col-md-8 col-md-offset-2') {
+            res = { resultCount: result.innerText }; // ### listings found
+        } else if (result.className === 'well col-md-8 col-md-offset-2') {
+            // Each listing
+            for (const child of result.children) {
+                if (child.className === 'property-details') {
+                    let details = {};
+                    const rows = child.childNodes[0].childNodes[0].rows;
+                    for (const index in rows) {
+                        if (index <= 22) {
+                            const key = rows[index].cells[0].innerText;
+                            const content = rows[index].cells[1].innerText;
+                            details = { ...details, [key]: content };
+                        }
+                    }
+                    res = { ...res, results: { ...res.results, [details['property_id']]: { ...details } } };
+                }
             }
-        } else {
-            res = { error: 'something went wrong' };
         }
-    });
-    // console.log(result);
-    return 'test';
+    }
+    return res;
 };
 
 // Function: Main function for task type = search
 const searchProperties = async () => {
     let results = [];
-    let updatedResults = [];
     const properties = getData();
     const inputType = getInputType();
-    console.log(inputType);
     if (properties) {
         setProcessToRun();
         for (const property of properties) {
             if (isProcessRunning) {
                 const result = await queryProperty([property, inputType]);
                 const formattedResult = formatResults(result);
-                results.push({ [property]: [...result] });
+                const updatedResult = { searchKey: property, ...formattedResult };
+                results.push(updatedResult);
             }
         }
     }
+    console.log(results);
+    setProcessToStop();
 };
 
 // Function: Main function for task type = exclude
@@ -249,11 +280,7 @@ const clickedStartStop = startStopBtn => {
             checkDependencies();
         } else {
             const response = confirm('Are you sure you want to stop the process?');
-            if (response) {
-                setProcessToStop();
-            } else {
-                console.log('Proceeding.');
-            }
+            if (response) setProcessToStop();
         }
     };
 };
@@ -261,7 +288,8 @@ const clickedStartStop = startStopBtn => {
 // Function: START/STOP button clicked handler
 const clickedClear = clearBtn => {
     clearBtn.onclick = () => {
-        console.log('Clicked clear')
+        const response = confirm('Are you sure you want to reset all fields?');
+        if (response) resetFields();
     };
 };
 
