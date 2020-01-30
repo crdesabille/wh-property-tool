@@ -42,10 +42,12 @@ const createMainPanel = () => {
 
         <div class='output_container'>
             <p>Output</p>
+            <div id='output_contents'></div>
         </div>
 
         <div class='logs_container'>
             <p>Logs</p>
+            <div id='logs'></div>
         </div>
     `;
     document.body.appendChild(wrapper);
