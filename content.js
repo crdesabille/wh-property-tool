@@ -231,64 +231,63 @@ const mainProcess = async () => {
             if (isProcessRunning) {
                 textBox.value = searchKey;
                 let completedResult = { searchKey: searchKey, taskType: taskType };
+                let formattedResult;
                 let queryResult;
                 queryResult = await queryPropertyInWarehouse();
                 if (taskType !== 'search') {
-
+                    formattedResult = formatResult(queryResult);
                 } else {
-                    queryResult = await queryPropertyInWarehouse();
-                    if (searchResult.length === 1) {
+                    if (queryResult.length === 1) {
                         //No listings found
-                        const formattedResult = formatResult(searchResult);
-                        const completeSearchResult = { searchKey: searchKey, taskType: taskType, taskStatus: 'Failed', remarks: 'No listings found', ...formattedResult };
-                        searchResults.push(completeSearchResult);
-                    } else if (searchResult.length > 2) {
+                        // const formattedResult = formatResult(searchResult);
+                        // const completeSearchResult = { searchKey: searchKey, taskType: taskType, taskStatus: 'Failed', remarks: 'No listings found', ...formattedResult };
+                        // searchResults.push(completeSearchResult);
+                    } else if (queryResult.length > 2) {
                         //Found multiple listings
-                        const formattedResult = formatResult(searchResult);
-                        const completeSearchResult = { searchKey: searchKey, taskType: taskType, taskStatus: 'Failed', remarks: 'Multiple listings found', ...formattedResult };
-                        searchResults.push(completeSearchResult);
-                    } else if (searchResult.length === 2) {
+                        // const formattedResult = formatResult(searchResult);
+                        // const completeSearchResult = { searchKey: searchKey, taskType: taskType, taskStatus: 'Failed', remarks: 'Multiple listings found', ...formattedResult };
+                        // searchResults.push(completeSearchResult);
+                    } else if (queryResult.length === 2) {
                         //Found unique
-                        const property = searchResult[1].childNodes[0].childNodes[3];
-                        const propertyState = property.dataset.state;
-                        if (taskType === 'exclude' && propertyState === 'included') {
-                            property.click();
-                            const verifyExclusionResult = await queryPropertyInWarehouse();
-                            const updatedProperty = verifyExclusionResult[1].childNodes[0].childNodes[3];
-                            const updatedPropertyState = updatedProperty.dataset.state;
-                            if (updatedPropertyState === 'excluded') {
-                                const formattedResult = formatResult(verifyExclusionResult);
-                                const completeSearchResult = { searchKey: searchKey, taskType: taskType, taskStatus: 'Success', remarks: 'Exclusion Successful', ...formattedResult };
-                                searchResults.push(completeSearchResult);
-                            } else {
-                                const formattedResult = formatResult(verifyExclusionResult);
-                                const completeSearchResult = { searchKey: searchKey, taskType: taskType, taskStatus: 'Failed', remarks: 'Unable to exclude', ...formattedResult };
-                                searchResults.push(completeSearchResult);
-                            }
-                        } else if (taskType === 'include' && propertyState === 'excluded') {
-                            property.click();
-                            const verifyExclusionResult = await queryPropertyInWarehouse();
-                            const updatedProperty = verifyExclusionResult[1].childNodes[0].childNodes[3];
-                            const updatedPropertyState = updatedProperty.dataset.state;
-                            if (updatedPropertyState === 'included') {
-                                const formattedResult = formatResult(verifyExclusionResult);
-                                const completeSearchResult = { searchKey: searchKey, taskType: taskType, taskStatus: 'Success', remarks: 'Inclusion Successful', ...formattedResult };
-                                searchResults.push(completeSearchResult);
-                            } else {
-                                const formattedResult = formatResult(verifyExclusionResult);
-                                const completeSearchResult = { searchKey: searchKey, taskType: taskType, taskStatus: 'Failed', remarks: 'Unable to include', ...formattedResult };
-                                searchResults.push(completeSearchResult);
-                            }
-                        } else {
-                            const formattedResult = formatResult(searchResult);
-                            const completeSearchResult = { searchKey: searchKey, taskType: taskType, taskStatus: 'Failed', remarks: `Property is currently ${propertyState}`, ...formattedResult };
-                            searchResults.push(completeSearchResult);
-                        }
+                        // const property = searchResult[1].childNodes[0].childNodes[3];
+                        // const propertyState = property.dataset.state;
+                        // if (taskType === 'exclude' && propertyState === 'included') {
+                        //     property.click();
+                        //     const verifyExclusionResult = await queryPropertyInWarehouse();
+                        //     const updatedProperty = verifyExclusionResult[1].childNodes[0].childNodes[3];
+                        //     const updatedPropertyState = updatedProperty.dataset.state;
+                        //     if (updatedPropertyState === 'excluded') {
+                        //         const formattedResult = formatResult(verifyExclusionResult);
+                        //         const completeSearchResult = { searchKey: searchKey, taskType: taskType, taskStatus: 'Success', remarks: 'Exclusion Successful', ...formattedResult };
+                        //         searchResults.push(completeSearchResult);
+                        //     } else {
+                        //         const formattedResult = formatResult(verifyExclusionResult);
+                        //         const completeSearchResult = { searchKey: searchKey, taskType: taskType, taskStatus: 'Failed', remarks: 'Unable to exclude', ...formattedResult };
+                        //         searchResults.push(completeSearchResult);
+                        //     }
+                        // } else if (taskType === 'include' && propertyState === 'excluded') {
+                        //     property.click();
+                        //     const verifyExclusionResult = await queryPropertyInWarehouse();
+                        //     const updatedProperty = verifyExclusionResult[1].childNodes[0].childNodes[3];
+                        //     const updatedPropertyState = updatedProperty.dataset.state;
+                        //     if (updatedPropertyState === 'included') {
+                        //         const formattedResult = formatResult(verifyExclusionResult);
+                        //         const completeSearchResult = { searchKey: searchKey, taskType: taskType, taskStatus: 'Success', remarks: 'Inclusion Successful', ...formattedResult };
+                        //         searchResults.push(completeSearchResult);
+                        //     } else {
+                        //         const formattedResult = formatResult(verifyExclusionResult);
+                        //         const completeSearchResult = { searchKey: searchKey, taskType: taskType, taskStatus: 'Failed', remarks: 'Unable to include', ...formattedResult };
+                        //         searchResults.push(completeSearchResult);
+                        //     }
+                        // } else {
+                        //     const formattedResult = formatResult(searchResult);
+                        //     const completeSearchResult = { searchKey: searchKey, taskType: taskType, taskStatus: 'Failed', remarks: `Property is currently ${propertyState}`, ...formattedResult };
+                        //     searchResults.push(completeSearchResult);
+                        // }
                     } else {
                         console.log('searchResult === null.');
                     }
                 }
-                const formattedResult = formatResult(queryResult);
                 completedResult = { ...completedResult, ...formattedResult };
                 searchResults.push(completedResult);
             }
