@@ -46,8 +46,7 @@ const createMainPanel = () => {
         </div>
 
         <div class='logs_container'>
-            <p>Logs</p>
-            <div id='logs'></div>
+            <p>Status: <span id='logs'></span></p>
         </div>
     `;
     document.body.appendChild(wrapper);
