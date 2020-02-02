@@ -3,12 +3,6 @@ chrome.runtime.sendMessage({ todo: "showPageAction" });
 let isMainPanelVisible = false;
 let isTaskRunning = false;
 
-// Function: Promise based timer
-const timer = sec => {
-    const ms = sec * 1000;
-    return new Promise(res => setTimeout(res, ms));
-};
-
 // Function: Create the main panel
 const createMainPanel = () => {
     const wrapper = document.createElement('div');
@@ -50,6 +44,12 @@ const createMainPanel = () => {
         </div>
     `;
     document.body.appendChild(wrapper);
+};
+
+// Function: Promise based timer
+const timer = sec => {
+    const ms = sec * 1000;
+    return new Promise(res => setTimeout(res, ms));
 };
 
 // Function: Show or Hide main panel
@@ -132,7 +132,7 @@ const setProcessToRun = () => {
     if (startStopBtn) startStopBtn.innerText = 'STOP';
     const clearBtn = document.getElementById('clearBtn');
     if (clearBtn) clearBtn.disabled = true;
-    console.log('Process running!');
+    console.log('A task is still running!');
 };
 
 // Function: set all visuals/variables to indicate process has been stopped
@@ -142,7 +142,7 @@ const setProcessToStop = () => {
     if (startStopBtn) startStopBtn.innerText = 'START';
     const clearBtn = document.getElementById('clearBtn');
     if (clearBtn) clearBtn.disabled = false;
-    console.log('Process halted or complete!');
+    console.log('Task was either halted or has completed!');
 };
 
 // Function: Clear fields and reset button
@@ -353,7 +353,7 @@ const clickedStartStop = startStopBtn => {
         if (startStopBtn.innerText === 'START') {
             checkDependencies();
         } else {
-            const response = confirm('Are you sure you want to stop the process?');
+            const response = confirm('Are you sure you want to stop the task?');
             if (response) setProcessToStop();
         }
     };
