@@ -1,7 +1,7 @@
 chrome.runtime.sendMessage({ todo: "showPageAction" });
 
 let isMainPanelVisible = false;
-let isProcessRunning = false;
+let isTaskRunning = false;
 
 // Function: Promise based timer
 const timer = sec => {
@@ -128,7 +128,7 @@ const getInputType = () => {
 
 // Function: set all visuals/variables to indicate process is running
 const setProcessToRun = () => {
-    isProcessRunning = true;
+    isTaskRunning = true;
     const startStopBtn = document.getElementById('startStopBtn');
     if (startStopBtn) startStopBtn.innerText = 'STOP';
     const clearBtn = document.getElementById('clearBtn');
@@ -138,7 +138,7 @@ const setProcessToRun = () => {
 
 // Function: set all visuals/variables to indicate process has been stopped
 const setProcessToStop = () => {
-    isProcessRunning = false;
+    isTaskRunning = false;
     const startStopBtn = document.getElementById('startStopBtn');
     if (startStopBtn) startStopBtn.innerText = 'START';
     const clearBtn = document.getElementById('clearBtn');
@@ -175,11 +175,8 @@ const clickSearchBtn = async sec => {
     await timer(sec);
 }
 
-// Function: Query each property from warehouse
-const queryPropertyInWarehouse = async args => {
-    // const [searchKey, inputType] = args;
-    // const textBox = inputType === 'propertyId' ? document.getElementById('property_id') : document.getElementById('address');
-    // textBox.value = searchKey;
+// Function: Query each property if it can be found in warehouse
+const queryPropertyInWarehouse = async () => {
     let waitTime = 1;
     let warehouseResponse;
     do {
@@ -195,10 +192,13 @@ const queryPropertyInWarehouse = async args => {
 const formatResult = results => {
     let formattedResult = {};
     for (const result of results) {
+        // If 0 listings found
         if (result.className === 'alert alert-danger') {
-            formattedResult = { resultCount: result.innerText, results: null }; // No listings found
+            formattedResult = { resultCount: result.innerText, results: null };
+        // If at least 1 listing is found, get the total count
         } else if (result.className === 'col-md-8 col-md-offset-2') {
-            formattedResult = { resultCount: result.innerText }; // ### listings found
+            formattedResult = { resultCount: result.innerText };
+        // If the element holds the property details of each listing
         } else if (result.className === 'well col-md-8 col-md-offset-2') {
             const propertyId = result.dataset.propertyId;
             const listingStatus = result.childNodes[0].childNodes[3].innerText === 'Exclude' ? 'Included' : 'Excluded';
@@ -218,109 +218,125 @@ const formatResult = results => {
     return formattedResult;
 };
 
-// Function: Main function
-const mainProcess = async () => {
-    let searchResults = [];
+// Function: Create CSV file containing all results
+const createDownloadableCsv = results => {
+    console.table(results);
+};
+
+// Function: Display all results to the output section of the panel
+const displayResults = results => {
+    console.table(results);
+};
+
+// Function: Main function for processing a given task
+const mainTaskProcessor = async () => {
+    let allResults = [];
     const taskType = getTaskType();
     const searchKeys = getData();
     const inputType = getInputType();
-    const textBox = inputType === 'propertyId' ? document.getElementById('property_id') : document.getElementById('address');
+    let textBox; 
+    // If inputData is of propertyId type
+    if(inputType === 'propertyId') {
+        textBox = document.getElementById('property_id');
+        document.getElementById('address').value = '';
+    // If inputData is of propertyAddress type
+    } else if (inputType === 'propertyAddress'){
+        textBox = document.getElementById('address');
+        document.getElementById('property_id').value = '';
+    // If unable to determine either
+    } else {
+        console.log('Something went wrong in selecting the correct textBox.');
+    }
+    // If searchKeys is not nullish
     if (searchKeys) {
         setProcessToRun();
         for (const searchKey of searchKeys) {
-            if (isProcessRunning) {
+            // If task has not been requested to be stopped
+            if (isTaskRunning) {
                 textBox.value = searchKey;
                 let completedResult = { searchKey: searchKey, taskType: taskType };
                 let formattedResult;
                 let queryResult;
                 queryResult = await queryPropertyInWarehouse();
-                if (taskType !== 'search') {
+                // If Task Type = search
+                if (taskType === 'search') {
                     formattedResult = formatResult(queryResult);
+                    completedResult = { ...completedResult, ...formattedResult };
+                // If Task Type = exclude or include
                 } else {
-                    if (queryResult.length === 1) {
-                        //No listings found
-                        // const formattedResult = formatResult(searchResult);
-                        // const completeSearchResult = { searchKey: searchKey, taskType: taskType, taskStatus: 'Failed', remarks: 'No listings found', ...formattedResult };
-                        // searchResults.push(completeSearchResult);
-                    } else if (queryResult.length > 2) {
-                        //Found multiple listings
-                        // const formattedResult = formatResult(searchResult);
-                        // const completeSearchResult = { searchKey: searchKey, taskType: taskType, taskStatus: 'Failed', remarks: 'Multiple listings found', ...formattedResult };
-                        // searchResults.push(completeSearchResult);
-                    } else if (queryResult.length === 2) {
-                        //Found unique
-                        // const property = searchResult[1].childNodes[0].childNodes[3];
-                        // const propertyState = property.dataset.state;
-                        // if (taskType === 'exclude' && propertyState === 'included') {
-                        //     property.click();
-                        //     const verifyExclusionResult = await queryPropertyInWarehouse();
-                        //     const updatedProperty = verifyExclusionResult[1].childNodes[0].childNodes[3];
-                        //     const updatedPropertyState = updatedProperty.dataset.state;
-                        //     if (updatedPropertyState === 'excluded') {
-                        //         const formattedResult = formatResult(verifyExclusionResult);
-                        //         const completeSearchResult = { searchKey: searchKey, taskType: taskType, taskStatus: 'Success', remarks: 'Exclusion Successful', ...formattedResult };
-                        //         searchResults.push(completeSearchResult);
-                        //     } else {
-                        //         const formattedResult = formatResult(verifyExclusionResult);
-                        //         const completeSearchResult = { searchKey: searchKey, taskType: taskType, taskStatus: 'Failed', remarks: 'Unable to exclude', ...formattedResult };
-                        //         searchResults.push(completeSearchResult);
-                        //     }
-                        // } else if (taskType === 'include' && propertyState === 'excluded') {
-                        //     property.click();
-                        //     const verifyExclusionResult = await queryPropertyInWarehouse();
-                        //     const updatedProperty = verifyExclusionResult[1].childNodes[0].childNodes[3];
-                        //     const updatedPropertyState = updatedProperty.dataset.state;
-                        //     if (updatedPropertyState === 'included') {
-                        //         const formattedResult = formatResult(verifyExclusionResult);
-                        //         const completeSearchResult = { searchKey: searchKey, taskType: taskType, taskStatus: 'Success', remarks: 'Inclusion Successful', ...formattedResult };
-                        //         searchResults.push(completeSearchResult);
-                        //     } else {
-                        //         const formattedResult = formatResult(verifyExclusionResult);
-                        //         const completeSearchResult = { searchKey: searchKey, taskType: taskType, taskStatus: 'Failed', remarks: 'Unable to include', ...formattedResult };
-                        //         searchResults.push(completeSearchResult);
-                        //     }
-                        // } else {
-                        //     const formattedResult = formatResult(searchResult);
-                        //     const completeSearchResult = { searchKey: searchKey, taskType: taskType, taskStatus: 'Failed', remarks: `Property is currently ${propertyState}`, ...formattedResult };
-                        //     searchResults.push(completeSearchResult);
-                        // }
-                    } else {
-                        console.log('searchResult === null.');
+                    // If warehouse returns only one listing
+                    if (queryResult.length === 2) {
+                        const property = queryResult[1].childNodes[0].childNodes[3];
+                        const propertyState = property.dataset.state;
+                        // If task type = exclude and the listing is currently included
+                        if(taskType === 'exclude' && propertyState === 'included'){
+                            property.click();
+                            do { await timer(1); } while (document.getElementById('results').style.display === 'none');
+                            const verifyExclusionResult = await queryPropertyInWarehouse();
+                            const updatedProperty = verifyExclusionResult[1].childNodes[0].childNodes[3];
+                            const updatedPropertyState = updatedProperty.dataset.state;
+                            formattedResult = formatResult(verifyExclusionResult);
+                            // If the state of the listing has changed to excluded
+                            if (updatedPropertyState === 'excluded') {
+                                completedResult = {...completedResult, taskStatus: 'Success', remarks: 'Exclusion Successful', ...formattedResult };
+                            // If the state of the listing did not change
+                            } else {
+                                completedResult = {...completedResult, taskStatus: 'Failed', remarks: 'Unable to exclude', ...formattedResult };
+                            }
+                        // If task type = include and the listing is currently excluded
+                        } else if (taskType === 'include' && propertyState === 'excluded'){
+                            property.click();
+                            do { await timer(1); } while (document.getElementById('results').style.display === 'none');
+                            const verifyExclusionResult = await queryPropertyInWarehouse();
+                            const updatedProperty = verifyExclusionResult[1].childNodes[0].childNodes[3];
+                            const updatedPropertyState = updatedProperty.dataset.state;
+                            formattedResult = formatResult(verifyExclusionResult);
+                            // If the state of the listing has changed to included
+                            if (updatedPropertyState === 'included') {
+                                completedResult = {...completedResult, taskStatus: 'Success', remarks: 'Inclusion Successful', ...formattedResult };
+                            // If the state of the listing did not change
+                            } else {
+                                completedResult = {...completedResult, taskStatus: 'Failed', remarks: 'Unable to include', ...formattedResult };
+                            }
+                        // If task type = include and listing is currently included or task type = exclude and listing is currently excluded
+                        } else {
+                            formattedResult = formatResult(queryResult);
+                            completedResult = {...completedResult, taskStatus: 'Failed', remarks: `Currently ${propertyState}`, ...formattedResult };
+                        }
+                    // If warehouse returns 0 or > 2 listings
+                    } else { 
+                        formattedResult = formatResult(queryResult);
+                        // If 0 listings found
+                        if (queryResult.length === 1) {
+                            completedResult = {...completedResult, taskStatus: 'Failed', remarks: 'No listings found', ...formattedResult };
+                        // If multiple listings found
+                        } else if (queryResult.length > 2 ) {
+                            completedResult = {...completedResult, taskStatus: 'Failed', remarks: 'Multiple listings found', ...formattedResult };
+                        // If the results container never got to load
+                        } else {
+                            completedResult = {...completedResult, taskStatus: 'Failed', remarks: 'Gateway Timeout. Please retry!', ...formattedResult };  
+                        }
                     }
                 }
-                completedResult = { ...completedResult, ...formattedResult };
-                searchResults.push(completedResult);
+                allResults.push(completedResult);
             }
         }
     }
-    console.log(searchResults);
+    displayResults(allResults);
     setProcessToStop();
 };
 
-// Function: Main function for task type = exclude
-const excludeProperties = () => { };
-
-// Function: Main function for task type = include
-const includeProperties = () => { };
-
-/* const selectTaskType = () => {
-    const taskType = getTaskType();
-    switch (taskType) {
-        case 'search': return searchProperties();
-        case 'exclude': return excludeProperties();
-        case 'include': return includeProperties();
-        default: return console.log('No Task Type selected.');
-    }
-}; */
-
-// Function: Perform initial checks prior to starting process
+// Function: Perform initial checks prior to starting task
 const checkDependencies = () => {
     const officeSelector = document.getElementById('datacode');
     const inputData = getData();
-    if (!isProcessRunning) {
+    // If no task is running
+    if (!isTaskRunning) {
+        // If an office is selected
         if (officeSelector.value !== '') {
+            // If addresses/ids have been entered in the textarea
             if (inputData) {
-                mainProcess();
+                mainTaskProcessor();
             } else {
                 alert('Please input IDs/Addresses of properties you want to process!');
             }
@@ -328,7 +344,7 @@ const checkDependencies = () => {
             alert('Please select an office!');
         }
     } else {
-        alert('A process is still running!');
+        alert('A task is still running!');
     }
 };
 
