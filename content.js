@@ -132,7 +132,7 @@ const setProcessToRun = () => {
     if (startStopBtn) startStopBtn.innerText = 'STOP';
     const clearBtn = document.getElementById('clearBtn');
     if (clearBtn) clearBtn.disabled = true;
-    console.log('A task is still running!');
+    console.log('A task is running!');
 };
 
 // Function: set all visuals/variables to indicate process has been stopped
