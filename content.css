@@ -116,7 +116,8 @@ h4 {
   background-color: #343d4a;
   box-sizing: border-box;
   width: 97%;
-  height: 91%;
+  height: fit-content;
+  max-height: 88%;
   padding: 5px 0;
   margin: auto;
   overflow-y: auto;
