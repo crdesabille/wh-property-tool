@@ -159,6 +159,12 @@ const resetFields = () => {
             taskTypeSelector.checked = taskTypeSelector.value === 'search' ? true : false;
         });
     }
+    if (document.getElementById('results_table')) document.getElementById('results_table').remove();
+    const warehouse_logs = document.getElementById('warehouse_logs');
+    if (warehouse_logs) {
+        warehouse_logs.innerHTML = '';
+        warehouse_logs.innerText = '';
+    }
     const inputDataContainer = document.getElementById('input_data');
     if (inputDataContainer) inputDataContainer.value = '';
     const propertyIdTextBox = document.getElementById('property_id');
@@ -205,7 +211,7 @@ const formatResult = results => {
             const propertyDetailsRows = propertyDetails.childNodes[0].childNodes[0].rows;
             let details = {};
             for (const rowIndex in propertyDetailsRows) {
-                if (rowIndex <= 22) {
+                if (rowIndex <= 11) {
                     const key = propertyDetailsRows[rowIndex].cells[0].innerText;
                     const content = propertyDetailsRows[rowIndex].cells[1].innerText;
                     details = { ...details, [key]: content };
@@ -219,12 +225,48 @@ const formatResult = results => {
 
 // Function: Create CSV file containing all results
 const createDownloadableCsv = results => {
-    console.table(results);
+    let csvBody = '';
+    let heading = 'searchKey,taskType,taskStatus,remarks,resultCount,';
+    let one = 1;
+    results.forEach(result => {
+        const searchKey = result.searchKey ? result.searchKey : '';
+        const taskType = result.taskType ? result.taskType : '';
+        const taskStatus = result.taskStatus ? result.taskStatus : '';
+        const taskRemarks = result.remarks ? result.remarks : '';
+        const resultCount = result.resultCount ? result.resultCount : '';
+        const actualResults = result.results;
+        csvBody += actualResults ? '' : `${searchKey},${taskType},${taskStatus},${taskRemarks},${resultCount},\n`;
+        for (const key in actualResults) {
+            csvBody += `${searchKey},${taskType},${taskStatus},${taskRemarks},${resultCount},`
+            const propertyKeys = Object.keys(actualResults[key]);
+            const eachResult = actualResults[key];
+            if (one === 1) {
+                heading += propertyKeys;
+                heading += ',';
+            }
+            for (const propertyKey of propertyKeys) {
+                csvBody += eachResult[propertyKey];
+                csvBody += ',';
+            }
+            csvBody += '\n';
+            --one;
+        }
+    });
+    heading += '\n';
+    const csvFile = heading + csvBody;
+    const warehouse_logs = document.getElementById('warehouse_logs');
+    const dlink = document.createElement('a');
+    dlink.href = 'data:text/csv;charset=utf-8,' + encodeURI(csvFile);
+    dlink.target = '_blank';
+    dlink.download = 'WH-Property-Tool-Results.csv';
+    dlink.innerText = 'Download CSV.';
+    dlink.setAttribute('style', 'color: yellow;');
+    warehouse_logs.innerText = '';
+    warehouse_logs.appendChild(dlink);
 };
 
 // Function: Display all results to the output section of the panel
 const displayResults = results => {
-    console.log(results);
     if (document.getElementById('results_table')) document.getElementById('results_table').remove();
     const container = document.getElementById('output_contents');
     container.innerHTML = '';
@@ -317,7 +359,7 @@ const mainTaskProcessor = async () => {
             // If task has not been requested to be stopped
             if (isTaskRunning) {
                 textBox.value = searchKey;
-                warehouse_logs.innerText = `Performing [${taskType}] on ${searchKey}.`;
+                warehouse_logs.innerText = `Performing [${taskType}] on searchKey: ${searchKey}.`;
                 let completedResult = { searchKey: searchKey, taskType: taskType };
                 let formattedResult;
                 let queryResult;
@@ -387,6 +429,7 @@ const mainTaskProcessor = async () => {
         }
     }
     displayResults(allResults);
+    createDownloadableCsv(allResults);
     setProcessToStop();
 };
 
