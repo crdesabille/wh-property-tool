@@ -40,7 +40,7 @@ const createMainPanel = () => {
         </div>
 
         <div class='logs_container'>
-            <p>Status: <span id='logs'></span></p>
+            <p id='warehouse_logs'></p>
         </div>
     `;
     document.body.appendChild(wrapper);
@@ -194,10 +194,10 @@ const formatResult = results => {
         // If 0 listings found
         if (result.className === 'alert alert-danger') {
             formattedResult = { resultCount: result.innerText, results: null };
-        // If at least 1 listing is found, get the total count
+            // If at least 1 listing is found, get the total count
         } else if (result.className === 'col-md-8 col-md-offset-2') {
             formattedResult = { resultCount: result.innerText };
-        // If the element holds the property details of each listing
+            // If the element holds the property details of each listing
         } else if (result.className === 'well col-md-8 col-md-offset-2') {
             const propertyId = result.dataset.propertyId;
             const listingStatus = result.childNodes[0].childNodes[3].innerText === 'Exclude' ? 'Included' : 'Excluded';
@@ -224,7 +224,68 @@ const createDownloadableCsv = results => {
 
 // Function: Display all results to the output section of the panel
 const displayResults = results => {
-    console.table(results);
+    console.log(results);
+    if (document.getElementById('results_table')) document.getElementById('results_table').remove();
+    const container = document.getElementById('output_contents');
+    container.innerHTML = '';
+    const resultsTable = document.createElement('table');
+    resultsTable.setAttribute('id', 'results_table');
+    resultsTable.setAttribute('class', 'results_table');
+    const resultsThead = document.createElement('thead');
+    resultsThead.setAttribute('class', 'table_header');
+    const resultsTbody = document.createElement('tbody');
+    resultsTbody.setAttribute('class', 'table_body');
+    const heading = document.createElement('tr');
+    heading.innerHTML = `
+            <th>searchKey</th>
+            <th>taskType</th>
+            <th>taskStatus</th>
+            <th>taskRemarks</th>
+            <th>resultCount</th>
+            <th>sourceID</th>
+            <th>included/excluded</th>
+            <th>status</th>
+            <th>address</th>
+        `;
+    resultsThead.appendChild(heading);
+    resultsTable.appendChild(resultsThead);
+    resultsTable.appendChild(resultsTbody);
+    container.appendChild(resultsTable);
+    results.forEach(result => {
+        const searchKey = result.searchKey ? result.searchKey : '';
+        const taskType = result.taskType ? result.taskType : '';
+        const taskStatus = result.taskStatus ? result.taskStatus : '';
+        const taskRemarks = result.remarks ? result.remarks : '';
+        const resultCount = result.resultCount ? result.resultCount : '';
+        const firstContentLine = document.createElement('tr');
+        firstContentLine.innerHTML = `
+            <td>${searchKey}</td>
+            <td>${taskType}</td>
+            <td>${taskStatus}</td>
+            <td>${taskRemarks}</td>
+            <td>${resultCount}</td>
+            <td>&#8628</td><td></td><td></td><td></td>
+        `;
+        resultsTbody.appendChild(firstContentLine);
+        const resultsPerSearchKey = result.results;
+        for (const resultPerSearchKey in resultsPerSearchKey) {
+            const eachResult = resultsPerSearchKey[resultPerSearchKey];
+            const contents = document.createElement('tr');
+            contents.innerHTML = `
+                    <td></td><td></td><td></td><td></td><td></td>
+                    <td>${eachResult.property_id}</td>
+                    <td>${eachResult.listingStatus}</td>
+                    <td>${eachResult.status}</td>
+                    <td>${eachResult.street_number} ${eachResult.street} ${eachResult.suburb}</td>
+            `;
+            resultsTbody.appendChild(contents);
+        }
+        const divider = document.createElement('tr');
+        divider.innerHTML = '<td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>';
+        divider.setAttribute('class', 'row_divider');
+        resultsTbody.appendChild(divider);
+
+    });
 };
 
 // Function: Main function for processing a given task
@@ -233,16 +294,19 @@ const mainTaskProcessor = async () => {
     const taskType = getTaskType();
     const searchKeys = getData();
     const inputType = getInputType();
-    let textBox; 
+    let textBox;
+    const warehouse_logs = document.getElementById('warehouse_logs');
+    const container = document.getElementById('output_contents');
+    container.innerHTML = `<p>Task [${taskType}] is running...</p>`;
     // If inputData is of propertyId type
-    if(inputType === 'propertyId') {
+    if (inputType === 'propertyId') {
         textBox = document.getElementById('property_id');
         document.getElementById('address').value = '';
-    // If inputData is of propertyAddress type
-    } else if (inputType === 'propertyAddress'){
+        // If inputData is of propertyAddress type
+    } else if (inputType === 'propertyAddress') {
         textBox = document.getElementById('address');
         document.getElementById('property_id').value = '';
-    // If unable to determine either
+        // If unable to determine either
     } else {
         console.log('Something went wrong in selecting the correct textBox.');
     }
@@ -253,6 +317,7 @@ const mainTaskProcessor = async () => {
             // If task has not been requested to be stopped
             if (isTaskRunning) {
                 textBox.value = searchKey;
+                warehouse_logs.innerText = `Performing [${taskType}] on ${searchKey}.`;
                 let completedResult = { searchKey: searchKey, taskType: taskType };
                 let formattedResult;
                 let queryResult;
@@ -260,15 +325,15 @@ const mainTaskProcessor = async () => {
                 // If Task Type = search
                 if (taskType === 'search') {
                     formattedResult = formatResult(queryResult);
-                    completedResult = { ...completedResult, ...formattedResult };
-                // If Task Type = exclude or include
+                    completedResult = { ...completedResult, taskStatus: 'Done', remarks: 'N/A', ...formattedResult };
+                    // If Task Type = exclude or include
                 } else {
                     // If warehouse returns only one listing
                     if (queryResult.length === 2) {
                         const property = queryResult[1].childNodes[0].childNodes[3];
                         const propertyState = property.dataset.state;
                         // If task type = exclude and the listing is currently included
-                        if(taskType === 'exclude' && propertyState === 'included'){
+                        if (taskType === 'exclude' && propertyState === 'included') {
                             property.click();
                             do { await timer(1); } while (document.getElementById('results').style.display === 'none');
                             const verifyExclusionResult = await queryPropertyInWarehouse();
@@ -277,13 +342,13 @@ const mainTaskProcessor = async () => {
                             formattedResult = formatResult(verifyExclusionResult);
                             // If the state of the listing has changed to excluded
                             if (updatedPropertyState === 'excluded') {
-                                completedResult = {...completedResult, taskStatus: 'Success', remarks: 'Exclusion Successful', ...formattedResult };
-                            // If the state of the listing did not change
+                                completedResult = { ...completedResult, taskStatus: 'Success', remarks: 'Exclusion Successful', ...formattedResult };
+                                // If the state of the listing did not change
                             } else {
-                                completedResult = {...completedResult, taskStatus: 'Failed', remarks: 'Unable to exclude', ...formattedResult };
+                                completedResult = { ...completedResult, taskStatus: 'Failed', remarks: 'Unable to exclude', ...formattedResult };
                             }
-                        // If task type = include and the listing is currently excluded
-                        } else if (taskType === 'include' && propertyState === 'excluded'){
+                            // If task type = include and the listing is currently excluded
+                        } else if (taskType === 'include' && propertyState === 'excluded') {
                             property.click();
                             do { await timer(1); } while (document.getElementById('results').style.display === 'none');
                             const verifyExclusionResult = await queryPropertyInWarehouse();
@@ -292,28 +357,28 @@ const mainTaskProcessor = async () => {
                             formattedResult = formatResult(verifyExclusionResult);
                             // If the state of the listing has changed to included
                             if (updatedPropertyState === 'included') {
-                                completedResult = {...completedResult, taskStatus: 'Success', remarks: 'Inclusion Successful', ...formattedResult };
-                            // If the state of the listing did not change
+                                completedResult = { ...completedResult, taskStatus: 'Success', remarks: 'Inclusion Successful', ...formattedResult };
+                                // If the state of the listing did not change
                             } else {
-                                completedResult = {...completedResult, taskStatus: 'Failed', remarks: 'Unable to include', ...formattedResult };
+                                completedResult = { ...completedResult, taskStatus: 'Failed', remarks: 'Unable to include', ...formattedResult };
                             }
-                        // If task type = include and listing is currently included or task type = exclude and listing is currently excluded
+                            // If task type = include and listing is currently included or task type = exclude and listing is currently excluded
                         } else {
                             formattedResult = formatResult(queryResult);
-                            completedResult = {...completedResult, taskStatus: 'Failed', remarks: `Currently ${propertyState}`, ...formattedResult };
+                            completedResult = { ...completedResult, taskStatus: 'Failed', remarks: `Currently ${propertyState}`, ...formattedResult };
                         }
-                    // If warehouse returns 0 or > 2 listings
-                    } else { 
+                        // If warehouse returns 0 or > 2 listings
+                    } else {
                         formattedResult = formatResult(queryResult);
                         // If 0 listings found
                         if (queryResult.length === 1) {
-                            completedResult = {...completedResult, taskStatus: 'Failed', remarks: 'No listings found', ...formattedResult };
-                        // If multiple listings found
-                        } else if (queryResult.length > 2 ) {
-                            completedResult = {...completedResult, taskStatus: 'Failed', remarks: 'Multiple listings found', ...formattedResult };
-                        // If the results container never got to load
+                            completedResult = { ...completedResult, taskStatus: 'Failed', remarks: 'No listings found', ...formattedResult };
+                            // If multiple listings found
+                        } else if (queryResult.length > 2) {
+                            completedResult = { ...completedResult, taskStatus: 'Failed', remarks: 'Multiple listings found', ...formattedResult };
+                            // If the results container never got to load
                         } else {
-                            completedResult = {...completedResult, taskStatus: 'Failed', remarks: 'Gateway Timeout. Please retry!', ...formattedResult };  
+                            completedResult = { ...completedResult, taskStatus: 'Failed', remarks: 'Gateway Timeout. Please retry!', ...formattedResult };
                         }
                     }
                 }
@@ -374,6 +439,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         clickedClear(document.getElementById('clearBtn'));
     }
 });
+
 
 
 
