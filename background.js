@@ -1,17 +1,15 @@
 chrome.runtime.onInstalled.addListener(function () {
-    chrome.storage.sync.set({ taskType: "", toExclude: "", whatList: "", processState: "Stopped", stopIt: false, skipDuplicates: 'yes' }, () => console.log(`
+    chrome.storage.sync.set({ isMainPanelVisible: false },
+        () => console.log(`
         --background.js--
-        Reset to Default: taskType, toExclude, whatList, processState, stopIt, skipDuplicates!
+            Reset isMainPanelVisible: false
         `)
     );
-    chrome.storage.sync.get(['taskType', 'toExclude', 'whatList', 'processState', 'stopIt', 'skipDuplicates'], result =>
-        console.log(`
+    chrome.storage.sync.get(['isMainPanelVisible'],
+        result =>
+            console.log(`
         --background.js--
-        taskType: ${result.taskType}
-        toExclude: ${result.toExclude}
-        processState: ${result.processState}
-        stopIt: ${result.stopIt}
-        skipDuplicates: ${result.skipDuplicates}
+            isMainPanelVisible: ${result.isMainPanelVisible}
         `)
     );
 });

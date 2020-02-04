@@ -61,18 +61,22 @@ const showHideMainPanel = async () => {
         if (!isMainPanelVisible) {
             isMainPanelVisible = !isMainPanelVisible;
             mainPanel.className = 'warehouse_tool warehouse_tool-open';
+            chrome.storage.sync.set({ isMainPanelVisible: isMainPanelVisible });
         } else {
             isMainPanelVisible = !isMainPanelVisible;
             mainPanel.className = 'warehouse_tool';
+            chrome.storage.sync.set({ isMainPanelVisible: isMainPanelVisible });
         }
     } else {
         const mainPanel = document.getElementById('warehouse_tool');
         if (!isMainPanelVisible) {
             isMainPanelVisible = !isMainPanelVisible;
             mainPanel.className = 'warehouse_tool warehouse_tool-open';
+            chrome.storage.sync.set({ isMainPanelVisible: isMainPanelVisible });
         } else {
             isMainPanelVisible = !isMainPanelVisible;
             mainPanel.className = 'warehouse_tool';
+            chrome.storage.sync.set({ isMainPanelVisible: isMainPanelVisible });
         }
     }
 }
@@ -262,6 +266,7 @@ const createDownloadableCsv = results => {
     dlink.innerText = 'Download CSV.';
     dlink.setAttribute('style', 'color: yellow;');
     warehouse_logs.innerText = '';
+    warehouse_logs.innerHTML = '<span>Done. </span>';
     warehouse_logs.appendChild(dlink);
 };
 
@@ -475,11 +480,12 @@ const clickedClear = clearBtn => {
     };
 };
 
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-    if (request.panel === 'display') {
-        showHideMainPanel();
+chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
+    if (request.panel === 'togglePanelVisibility') {
+        await showHideMainPanel();
         clickedStartStop(document.getElementById('startStopBtn'));
         clickedClear(document.getElementById('clearBtn'));
+        sendResponse({ isMainPanelVisible: isMainPanelVisible });
     }
 });
 
