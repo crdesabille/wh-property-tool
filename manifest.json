@@ -1,7 +1,7 @@
 {
     "name": "Warehouse Property Tool",
     "version": "1.0",
-    "description": "A simple tool for searching/excluding/including properties in the ActivePipe Warehouse.",
+    "description": "A simple tool for searching/excluding/including properties in the company Warehouse.",
     "manifest_version": 2,
     "background": {
         "scripts": [
