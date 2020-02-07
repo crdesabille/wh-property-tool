@@ -290,6 +290,7 @@ const displayResults = results => {
             <th>taskRemarks</th>
             <th>resultCount</th>
             <th>sourceID</th>
+            <th>alternateID</th>
             <th>included/excluded</th>
             <th>status</th>
             <th>address</th>
@@ -320,7 +321,8 @@ const displayResults = results => {
             const contents = document.createElement('tr');
             contents.innerHTML = `
                     <td></td><td></td><td></td><td></td><td></td>
-                    <td>${eachResult.property_id}</td>
+                    <td>${eachResult.source_property_id}</td>
+                    <td>${eachResult.source_alternate_id}</td>
                     <td>${eachResult.listingStatus}</td>
                     <td>${eachResult.status}</td>
                     <td>${eachResult.street_number} ${eachResult.street} ${eachResult.suburb}</td>
@@ -328,7 +330,7 @@ const displayResults = results => {
             resultsTbody.appendChild(contents);
         }
         const divider = document.createElement('tr');
-        divider.innerHTML = '<td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>';
+        divider.innerHTML = '<td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>';
         divider.setAttribute('class', 'row_divider');
         resultsTbody.appendChild(divider);
 
