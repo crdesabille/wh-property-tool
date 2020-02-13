@@ -384,7 +384,7 @@ const mainTaskProcessor = async () => {
                         // If task type = exclude and the listing is currently included
                         if (taskType === 'exclude' && propertyState === 'included') {
                             property.click();
-                            do { await timer(1); } while (document.getElementById('results').style.display === 'none');
+                            do { await timer(1.5); } while (document.getElementById('results').style.display === 'none');
                             const verifyExclusionResult = await queryPropertyInWarehouse();
                             const updatedProperty = verifyExclusionResult[1].childNodes[0].childNodes[3];
                             const updatedPropertyState = updatedProperty.dataset.state;
