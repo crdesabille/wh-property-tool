@@ -11,6 +11,7 @@
     },
     "permissions": [
         "storage",
+        "https://warehouse.activepipe.com/api/onboarding/data/exclude",
         "http://warehouse.activepipe.com/api/onboarding/data/exclude"
     ],
     "page_action": {
@@ -31,6 +32,7 @@
     "content_scripts": [
         {
             "matches": [
+                "https://warehouse.activepipe.com/api/onboarding/data/exclude",
                 "http://warehouse.activepipe.com/api/onboarding/data/exclude"
             ],
             "js": [
